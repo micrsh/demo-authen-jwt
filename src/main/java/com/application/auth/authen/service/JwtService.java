@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -16,7 +17,7 @@ public class JwtService {
     @Value("${jwt.expirationMs}")
     private long expirationMs;
 
-    public String generateToken(UserDetailsImpl userDetails) {
+    public String generateAccessToken(UserDetailsImpl userDetails) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date())
@@ -25,9 +26,18 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateRefreshToken(UserDetailsImpl userDetails) {
+        return Jwts.builder()
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expirationMs * 2)) // Refresh token typically has a longer expiration
+                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()), Jwts.SIG.HS256)
+                .compact();
+    }
+
     public String extractUsername(String token) {
         return Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                .verifyWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)))
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -36,6 +46,6 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetailsImpl userDetails) {
         String username = extractUsername(token);
-        return username.equals(userDetails.getUser().getUsername());
+        return username.equals(userDetails.getUsername());
     }
 }

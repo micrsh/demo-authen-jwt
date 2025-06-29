@@ -1,5 +1,6 @@
 package com.application.auth.authen.dto;
 
+import com.application.auth.authen.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,10 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class AuthResponseDTO {
-    private String token;
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType = "Bearer";
+    private User user;
+    private String message;
 }
 
